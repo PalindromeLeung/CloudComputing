@@ -8,27 +8,39 @@ from mrjob.job import MRJob
 from mrjob.step import MRStep
 import re
 
-class MRHarryPotter(MRJob):
-	def mapper_get_words(self, key, line):
-		letters_only = re.sub("[^a-zA-Z]"," ",line)
-		letters_only = letters_only.lower()
-		split2words = letters_only.split(" ")
-		for i in range(len(split2words)):
-			yield	split2words[i],1
 
-	def combiner_sum_count(self,key, values):
-		yield key,sum(values)
+class MRMostUsedWord(MRJob):
 
-	def map_sort(self,word,count):
-		count = '%04d' % int(count) 
-		yield count, word
-	def steps(self):
-		return [
-			MRStep(mapper = self.mapper_get_words,
-				combiner = self.combiner_sum_count,
-				reducer = self.map_sort)
-		]
+    def steps(self):
+        return [
+            MRStep(mapper=self.mapper_get_words,
+                   combiner=self.combiner_count_words,
+                   reducer=self.reducer_count_words),
+            MRStep(reducer=self.reducer_sort_words)
+        ]
 
+    def mapper_get_words(self, _, line):
+        # yield each word in the line
+        line = re.sub("[^a-zA-Z]"," ",line)
+        for word in line.split():
+            yield (word.lower(), 1)
+
+    def combiner_count_words(self, word, counts):
+        # optimization: sum the words we've seen so far
+        yield (word, sum(counts))
+
+    def reducer_count_words(self, word, counts):
+        # send all (num_occurrences, word) pairs to the same reducer.
+        # num_occurrences is so we can easily use Python's max() function.
+        # yield None, (sum(counts), word)
+        yield None, ('%04d' % int(next(counts)), word)
+    # discard the key; it is just None
+    def reducer_sort_words(self, _, word_count_pairs):
+        word_count_pairs = [(x,y) for x,y in word_count_pairs]
+        result = sorted(word_count_pairs, key=lambda tup: tup[0],reverse = True)
+        length = len(result)
+        for i in range(length):
+            yield result[i]
 
 if __name__ == '__main__':
-	MRHarryPotter.run()
+    MRMostUsedWord.run()
