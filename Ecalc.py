@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np 
 import os 
 import re
-
+from scipy.fftpack import fft, ifft
+from numpy.linalg import inv
 # pwd = CloudComputing/Ecalc.py
 
 # open stream data files and read each 
@@ -32,19 +33,32 @@ def extracting_min(TimeStampString):
 
 def extracting_sec(TimeStampString):
 	index_T = TimeStampString.find("T")		
-	return TimeStampString[index_T+7,index_T+9]
+	return TimeStampString[index_T+7:index_T+9]
 
 def extracting_milisec(TimeStampString):
 	# just keep the first four digits
 	index_T = TimeStampString.find(".")		
-	return TimeStampString[index_T+1:index_T+5]	
+	return TimeStampString[index_T+1:index_T+4]	
 
 acceler_df['Date'] = acceler_df.Timestamp.apply(extracting_date)
-acceler_df['Hour'] = acceler_df.Timestamp.apply(extracting_hour)
-acceler_df['Minute'] = acceler_df.Timestamp.apply(extracting_min)
-acceler_df['MiliSec'] = acceler_df.Timestamp.apply(extracting_milisec)
+acceler_df['Hour'] = acceler_df.Timestamp.apply(extracting_hour).astype(float)
+acceler_df['Minute'] = acceler_df.Timestamp.apply(extracting_min).astype(float)
+acceler_df['Second'] = acceler_df.Timestamp.apply(extracting_sec).astype(float)
+acceler_df['MiliSec'] = acceler_df.Timestamp.apply(extracting_milisec).astype(float)
 
-# calculating the distance between the two sampling period
+# treat those numbers as discreet signals and perform DFT on the matrix
+
+matrix_x = acceler_df.as_matrix(columns = ['X','Y','Z','Hour','Minute','Second','MiliSec'])
+fft_y = fft(matrix_x)
+
+# take the transpose of matrix_x and the transpose of fft_y
+x_trans = matrix_x.transpose()
+y_trans = fft_y.transpose()
+
+t1 = np.matmul(matrix_x, y_trans)
+t2 = np.matmul(fft_y, x_trans)
+
+# compute matrix multiplication
 
 
 
