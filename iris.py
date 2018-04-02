@@ -1,7 +1,7 @@
 # Cloud Computing homework 3 - Map Reduce Framework 
 # Sample code from the tutorials
 # https://pythonhosted.org/mrjob/guides/quickstart.html
-
+# © isPrime
 # pwd = /Users/isprime/Documents/Garbages/CloudComputing/CloudComputing
 
 
@@ -49,6 +49,7 @@ class MRIris2(MRJob):
 
     def reducer_max_petal_width(self,categ, width):
         yield "Max Petal Width", max(width)
+
     def steps(self):
         return[
         MRStep(mapper = self.mapper_get_petal_width,
@@ -62,24 +63,47 @@ class MRIris3(MRJob):
         line_split = line.split(",")
         classification = line_split[-1]
         sep_width = line_split[1] # actually the 2nd field
-        if classification =='setosa':
-            yield classification,float(sep_width)
-            yield key, float(sum(sep_width))/len(sep_width)
+        if 'setosa' in classification:
+            yield float(sep_width),1
 
+    def combiner_get_sum_counts(self, sep_width, count):
+        total_width = 0
+        counts = 0
+        for i in sep_width: 
+            total_width += float(next(sep_width))
+            counts += next(count)        
+        yield total_width, counts
 
+    def reducer_avg_sepal_width_setosa(self, total_width, counts):
+
+        yield total_width/counts
+
+    def steps(self):
+        return[
+        MRStep(mapper = self.mapper_get_sepal_width_setosa,
+                combiner = self.combiner_get_sum_counts,
+                reducer = self.reducer_avg_sepal_width_setosa)]
 
 class MRIris4(MRJob):
     # 4) the difference in average sepal and petal length for all non-“Iris Setosa”
+    def mapper_get_diff_length(self, key, line):
+        line_split = line.split(",")
+        classification = line_split[-1]
+        diff_length = float(line_split[0]) - float(line_split[2])
+        if 'setosa' not in classification: 
+            yield diff_length, 1
+
+    def reducer_get_total_diff(self, dif_len, count):
+        yield float(sum(dif_len))/sum(count)
 
     def steps(self):
         return [
-            MRStep(mapper=self.mapper_get_sepal_len,
-                   reducer=self.reducer_min_sepal_len)]
-
+            MRStep(mapper=self.mapper_get_diff_length,
+                   reducer=self.reducer_get_total_diff)]
 
 if __name__ == '__main__':
     
-    MRIris1.run()
-    MRIris2.run()
+    # MRIris1.run()
+    # MRIris2.run()
     # MRIris3.run()
-    # MRIris4.run()
+    MRIris4.run()
