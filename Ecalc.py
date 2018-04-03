@@ -58,9 +58,7 @@ y_trans = fft_y.transpose()
 t1 = np.matmul(matrix_x, y_trans)
 t2 = np.matmul(fft_y, x_trans)
 
-# compute matrix multiplication
-
-
+Adopting the computation for lattice 
 
 # EDA on some of the fields to grasp the whole picture of the current dataset.
 
