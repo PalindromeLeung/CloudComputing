@@ -61,49 +61,44 @@ class MRIris3(MRJob):
     # def mapper_get_sepal_width_Setosa(self,key,line):
     def mapper_get_sepal_width_setosa(self,key,line):
         line_split = line.split(",")
-        classification = line_split[-1]
-        sep_width = line_split[1] # actually the 2nd field
-        if 'setosa' in classification:
-            yield float(sep_width),1
+        if 'setosa' in line_split[-1]:
+            yield line_split[-1],line_split[1]
 
-    def combiner_get_sum_counts(self, sep_width, count):
-        total_width = 0
+    def reducer_avg_sepal_width_setosa (self,categ, sepal_width):
+        total_width = 0.0
         counts = 0
-        for i in sep_width: 
-            total_width += float(next(sep_width))
-            counts += next(count)        
-        yield total_width, counts
+        # print (sepal_width)
+        for i in sepal_width:
+            total_width += float(i) 
+            counts += 1
 
-    def reducer_avg_sepal_width_setosa(self, total_width, counts):
-
-        yield total_width/counts
+        yield (None, total_width / counts)
 
     def steps(self):
         return[
         MRStep(mapper = self.mapper_get_sepal_width_setosa,
-                combiner = self.combiner_get_sum_counts,
                 reducer = self.reducer_avg_sepal_width_setosa)]
 
 class MRIris4(MRJob):
     # 4) the difference in average sepal and petal length for all non-“Iris Setosa”
-    def mapper_get_diff_length(self, key, line):
+    def mapper(self, key, line):
         line_split = line.split(",")
         classification = line_split[-1]
         diff_length = float(line_split[0]) - float(line_split[2])
         if 'setosa' not in classification: 
-            yield diff_length, 1
+            yield classification, diff_length
 
-    def reducer_get_total_diff(self, dif_len, count):
-        yield float(sum(dif_len))/sum(count)
-
-    def steps(self):
-        return [
-            MRStep(mapper=self.mapper_get_diff_length,
-                   reducer=self.reducer_get_total_diff)]
+    def reducer(self, categ, dif_len):
+        sum_len = 0.0
+        counts = 0
+        for i in dif_len:
+            sum_len += float(i)
+            counts += 1
+        yield (None,sum_len/counts)
 
 if __name__ == '__main__':
     
-    # MRIris1.run()
-    # MRIris2.run()
-    # MRIris3.run()
+    MRIris1.run()
+    MRIris2.run()
+    MRIris3.run()
     MRIris4.run()
