@@ -1,0 +1,4 @@
+"Min Sepal Length"	4.3
+"Max Petal Width"	2.5
+null	3.417999999999999
+null	1.6759999999999997
