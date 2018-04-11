@@ -1,9 +1,13 @@
 import pandas as pd 
 import numpy as np 
 import os 
+import warnings
+warnings.filterwarnings("ignore")
 import re
 from scipy.fftpack import fft, ifft
 from numpy.linalg import inv
+from sklearn.decompositon import PCA
+
 # pwd = CloudComputing/Ecalc.py
 
 # open stream data files and read each 
@@ -57,8 +61,6 @@ y_trans = fft_y.transpose()
 
 t1 = np.matmul(matrix_x, y_trans)
 t2 = np.matmul(fft_y, x_trans)
-
-Adopting the computation for lattice 
 
 # EDA on some of the fields to grasp the whole picture of the current dataset.
 
