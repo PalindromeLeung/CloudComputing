@@ -8,15 +8,19 @@ from scipy.fftpack import fft, ifft
 from numpy.linalg import inv
 from TimeFeatureEng import *
 from SpaceFeatureEng import *
+import time
+
 # pwd = CloudComputing/Ecalc.py
 
 # open stream data files and read each 
 # to be modiftied to read in chunks of data frame
 path = '/Users/isprime/Documents/Garbages/CloudComputing/Accelerdata/'
 
-
+# todos :
+# 1. Add time evaluation methods
+# 2. Add bandwith evaluation methods
+# 3. Find a fancy map to represent the data 
 def extracting_date(TimeStampString):
-
     index_T = TimeStampString.find("T")
     return TimeStampString[:index_T]
 
@@ -42,15 +46,24 @@ def Angle(vect1, vect2):
     sinang = la.norm(np.cross(v1, v2))
     return np.arctan2(sinang, cosang)
 
+def plot
+# MACROS
+CHUNKSIZE = 1000
+
+# create a dictionary for keeping the interval for Processing each of the file
+fileInterval = dict()
+
 for i,filename in enumerate(os.listdir(path)):
 	print(filename)
-	print("Processing file " + str(i) + filename + "...")
+	print("Processing file " + filename + "segment" + str(i) "...")
 
 	# chunks_df = pd.read_csv(filename,header = 0, chunksize=500)
-	chunk_df = pd.read_csv("../Accelerdata/sample.csv", header = 0)
-	# for chunk_df in chunks_df:
-		# Time Features
-
+		
+	chunk_interval = 0
+	for chunk_df in pd.read_csv("../Accelerdata/sample.csv", header = 0,chunksize = CHUNKSIZE,iterator = True):
+		# create a dictionary for keeping the interval for Processing each of the chuck	
+		# Time FeaturesBelow
+		start = time.time()
 		chunk_df['Date'] = chunk_df.Timestamp.apply(lambda x: extracting_date(x))
 		chunk_df['Hour'] = chunk_df.Timestamp.apply(lambda x: extracting_hour(x)).astype(float)
 		chunk_df['Minute'] = chunk_df.Timestamp.apply(lambda x: extracting_min(x)).astype(float)
@@ -61,13 +74,13 @@ for i,filename in enumerate(os.listdir(path)):
 		# Space Features
 
 		# distance
-		chunk_df['EcluDist'] = chunk_df.apply(lambda row: math.sqrt(row.X ** 2 + row.Y ** 2 + row.Z **2), axis = 1)
+		chunk_df['EcluDist'] = chunk_df.apply(lambda row: np.sqrt(row.X ** 2 + row.Y ** 2 + row.Z **2), axis = 1)
 
 		# angles
 		# chunk_df['Angle'] = chunk_df.apply(lambda row: Angle(zip(row.X,row.Y,row.Z), zip(row.shift(1).X,row.shift(1).Y,row.shift(1).Z)))
 
 		# labels
-		chunk_df['ID'] = i
+		# chunk_df['ID'] = i
 
 		# treat those numbers as discreet signals and perform DFT on the matrix
 
@@ -80,13 +93,15 @@ for i,filename in enumerate(os.listdir(path)):
 
 		t1 = np.matmul(matrix_x, y_trans)
 		t2 = np.matmul(fft_y, x_trans)
+		end = time.time()
 
+		interval = end - start
 
+		chunk_interval += interval
 
+	# take the sum of the interval for each file 
+	fileInterval[i] = chunk_interval
 
-
-
-
-
-
-
+	fileInterval_df = pd.DataFrame.from_dict(fileInterval,orient = 'index',dtype = None)
+	fileInterval_df.to_csv("TimeEvlResult"+filename)
+	# another script for ploting 
