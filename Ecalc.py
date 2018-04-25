@@ -8,7 +8,7 @@
 # 1. Add time evaluation methods
 # 2. Add bandwith evaluation methods
 # 3. Find a fancy map to represent the data
-
+from dateutil import parser
 import pandas as pd 
 import numpy as np 
 import os 
@@ -28,35 +28,25 @@ import seaborn as sns
 
 # open stream data files and read each 
 # to be modiftied to read in chunks of data frame
-path = '../Accelerdata/'
-resultDirectory = '../ResultTimeEvlResult'
+path = 'Accelerdata/'
+resultDirectory = 'ResultTimeEvlResult'
 
 
 def extracting_date(TimeStampString):
-    index_T = TimeStampString.find("T")
-    return TimeStampString[:index_T]
+    return parser.parse(TimeStampString).date
 
 def extracting_hour(TimeStampString):
-    index_T = TimeStampString.find("T")
-    return TimeStampString[index_T+1:index_T+3]
+    return parser.parse(TimeStampString).time().hour
 
 def extracting_min(TimeStampString):
-    index_T = TimeStampString.find("T")
-    return TimeStampString[index_T+4:index_T+6]
+    return parser.parse(TimeStampString).time().min 
 
 def extracting_sec(TimeStampString):
-    index_T = TimeStampString.find("T")     
-    return TimeStampString[index_T+7:index_T+9]
+    return parser.parse(TimeStampString).time().second
 
 def extracting_milisec(TimeStampString):
     # just keep the first four digits
-    index_T = TimeStampString.find(".")     
-    return TimeStampString[index_T+1:index_T+4] 
-
-def Angle(vect1, vect2):
-    cosang = np.dot(v1, v2)
-    sinang = la.norm(np.cross(v1, v2))
-    return np.arctan2(sinang, cosang)
+    return parser.parse(TimeStampString).time().microsecond
 
 # def plot
 # MACROS
@@ -72,14 +62,15 @@ for i,filename in enumerate(os.listdir(path)):
     print(filename)
     print("Processing file " + filename + "  |segment  " + str(i) + "|...")
 
-    # chunks_df = pd.read_csv(filename,header = 0, chunksize=500)
         
     chunk_interval = 0
-    for chunk_df in pd.read_csv("../Accelerdata/sample.csv", header = 0,chunksize = CHUNKSIZE,iterator = True):
+
+    for chunk_df in pd.read_csv(path + "/" + filename, header = 0,chunksize = CHUNKSIZE,iterator = True):
         # create a dictionary for keeping the interval for Processing each of the chuck 
         # Time FeaturesBelow
         start = time.time()
 
+        # chunks_df = pd.read_csv("../Accelerdata/sample.csv",header = 0, chunksize=500)
         chunk_df.dropna()
         chunk_df['Date'] = chunk_df.Timestamp.apply(lambda x: extracting_date(x))
         chunk_df['Hour'] = chunk_df.Timestamp.apply(lambda x: extracting_hour(x)).astype(float)
