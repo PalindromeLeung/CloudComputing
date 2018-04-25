@@ -39,7 +39,7 @@ def extracting_hour(TimeStampString):
     return parser.parse(TimeStampString).time().hour
 
 def extracting_min(TimeStampString):
-    return parser.parse(TimeStampString).time().min 
+    return parser.parse(TimeStampString).time().minute 
 
 def extracting_sec(TimeStampString):
     return parser.parse(TimeStampString).time().second
