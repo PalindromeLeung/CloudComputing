@@ -79,6 +79,8 @@ for i,filename in enumerate(os.listdir(path)):
         # create a dictionary for keeping the interval for Processing each of the chuck 
         # Time FeaturesBelow
         start = time.time()
+
+        chunk_df.dropna()
         chunk_df['Date'] = chunk_df.Timestamp.apply(lambda x: extracting_date(x))
         chunk_df['Hour'] = chunk_df.Timestamp.apply(lambda x: extracting_hour(x)).astype(float)
         chunk_df['Minute'] = chunk_df.Timestamp.apply(lambda x: extracting_min(x)).astype(float)
@@ -115,7 +117,7 @@ for i,filename in enumerate(os.listdir(path)):
         chunk_interval += interval
 
     # take the sum of the interval for each file 
-    fileInterval[i] = chunk_interval
+    fileInterval[i] = "{0:.2f}".format(chunk_interval)
 
     fileInterval_df = pd.DataFrame.from_dict(fileInterval,orient = 'index',dtype = None)
     
@@ -124,7 +126,4 @@ for i,filename in enumerate(os.listdir(path)):
             
     fileInterval_df.to_csv(resultDirectory + "/{}".format(filename))
     # another script for ploting 
-
-fig = sns.jointplot("files", "time", data=fileInterval_df, kind="kde", space=0, color="g")
-fig.savefig("output.png")
 
